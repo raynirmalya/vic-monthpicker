@@ -1,0 +1,53 @@
+<div class="datepicker-container" >
+<input type="text" class="form-control"
+  #input
+  (input)="onChange($event.target.value)"
+  (blur)="onTouched()"
+  [disabled]="isDisabled"
+  [placeholder]="placeholder"
+  name="vic-monthpicker" (focus)="onFocus()" (blur)="onTouched()"  id="vic-monthpicker" />
+   <span class="error" *ngIf="controlDir && !controlDir.control.valid
+     && controlDir.control.touched">{{errorMsg}}</span>
+
+<div class="vic-mpicker" (clickOutside)="closeMonthPicker()" [isOpen]="showPicker" *ngIf="showPicker" [style.top.px]="datePickerPosition.top" [style.left.px]="datePickerPosition.left">
+  <div class="vic-mpicker-header">
+    <div class="col-sm-12" [hidden]="!(currentViewType === viewTypes.MONTH)">
+    <div class="col-sm-2 inline-block pointer" (click)="prev()">
+    <em class="fa fa-caret-left fa-15"></em>
+    </div>
+     <div class="col-sm-8 inline-block text-center pointer" (click)="changeToYearView()">
+     {{currentYear}}
+     </div>
+     <div class="col-sm-2 inline-block pointer" (click)="next()">
+     <em class="fa fa-caret-right fa-15 right"></em>
+     </div>
+     </div>
+
+    <div class="col-sm-12" [hidden]="!(currentViewType === viewTypes.YEAR)">
+    <div class="col-sm-2 inline-block pointer" (click)="prevYearRange()">
+    <em class="fa fa-caret-left fa-15"></em>
+    </div>
+     <div class="col-sm-8 inline-block text-center pointer">
+     {{vicMonthpickerService.rangeYear[0]}}-{{vicMonthpickerService.rangeYear[1]}}
+     </div>
+     <div class="col-sm-2 inline-block pointer" (click)="nextYearRange()">
+     <em class="fa fa-caret-right fa-15 right"></em>
+     </div>
+     </div>
+  </div>
+  <div class="vic-mpicker-content">
+  <div class="col-sm-12" [hidden]="!(currentViewType === viewTypes.MONTH)">
+    <div class="col-sm-4 text-center inline-block pointer" *ngFor="let month of vicMonthpickerService.monthList;let i=index"
+    [ngClass]="{'last-column': i % 3 === 2, 'disabled': isMonthDisabled(i), 'selected-month': isSelectedMonth(i) }" (click)="selectMonth(i)">
+    {{month.monthName}}
+    </div>
+  </div>
+    <div class="col-sm-12" [hidden]="!(currentViewType === viewTypes.YEAR)">
+    <div class="col-sm-2 text-center inline-block pointer" *ngFor="let yr of vicMonthpickerService.yearList;let i=index"
+    [ngClass]="{'last-column': i % 3 === 4, 'selected-year': year === yr.yearLabel  }" (click)="selectYear(i)">
+    {{yr.yearLabel}}
+    </div>
+  </div>
+  </div>
+</div>
+</div>

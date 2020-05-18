@@ -1,0 +1,40 @@
+.vic-mpicker {
+  width: 350px;
+  height: 240px;
+  border: 1px solid #ccc;
+  color: #424242;
+  position: absolute;
+}
+.inline-block {
+  display: inline-block;
+  padding: 10px;
+  vertical-align: top;
+}
+.fa-15 {
+  font-size: 1.5em;
+}
+.right {
+  float: right;
+}
+.vic-mpicker-header {
+  background-color: #EBEBEB;
+}
+.pointer {
+  cursor: pointer;
+}
+.disabled {
+  color: #ccc;
+  cursor: default !important;
+}
+.selected-month, .selected-year {
+  background-color: #424242;
+  border-radius: 20px;
+  color: white;
+}
+
+@media (min-width: 576px) {
+  .vic-mpicker-content .col-sm-2 {
+    flex: 0 0 19.7%;
+    max-width: 19.7%;
+  }
+}
