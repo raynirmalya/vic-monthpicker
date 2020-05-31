@@ -9,8 +9,9 @@ import { ViewType, Position, MonthDetails } from './vic-monthpicker.model';
   templateUrl: './vic-monthpicker.component.html',
   styleUrls: ['./vic-monthpicker.component.css'],
 })
-export class VicMonthPickerComponent implements OnInit, ControlValueAccessor, OnChanges {  // Validator
+export class VicMonthPickerComponent implements OnInit, ControlValueAccessor {
   @ViewChild('input', {static: true}) input: ElementRef;
+  @Input() label: string;
   @Input() isDisabled = false;
   @Input() placeholder: string;
   @Input() isRequired = false;
@@ -19,6 +20,7 @@ export class VicMonthPickerComponent implements OnInit, ControlValueAccessor, On
   @Input() dateFormat: string;
   @Input() maxDate: string;
   @Output() monthYearChange: EventEmitter<MonthDetails> = new EventEmitter<MonthDetails>();
+  @Output() validationCheck: EventEmitter<boolean> = new EventEmitter<boolean>();
   viewTypes = ViewType;
   currentViewType: number;
   currentYear: number = null;
@@ -27,14 +29,16 @@ export class VicMonthPickerComponent implements OnInit, ControlValueAccessor, On
   month: number = null;
   public showPicker: boolean;
   public datePickerPosition: Position = {} as Position;
-  constructor(@Self() public controlDir: NgControl, private vicMonthpickerService: VicMonthpickerService) {
-    this.controlDir.valueAccessor = this;
+  public date: string;
+  public isValid = true;
+  private maxMonth: number;
+  private maxYear: number;
+  constructor(private vicMonthpickerService: VicMonthpickerService) {
   }
 
 
   ngOnInit() {
     this.setDefault();
-    // this.setValidation();
   }
 
   private setDefault() {
@@ -44,49 +48,14 @@ export class VicMonthPickerComponent implements OnInit, ControlValueAccessor, On
     this.month = todayDate.getMonth();
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes.data && !changes.data.firstChange) {
-        // if (this.settings.groupBy) {
-        //     this.groupedData = this.transformData(this.data, this.settings.groupBy);
-        //     if (this.data.length === 0) {
-        //         this.selectedItems = [];
-        //     }
-        // }
-        // this.writeValue(this.v);
-    }
-}
-  // private setValidation() {
-  //   const control = this.controlDir.control;
-  //   const validators: ValidatorFn[] = control.validator ? [control.validator] : [];
-  //   if (this.isRequired) {
-  //     validators.push(Validators.required);
-  //   }
-  //   if (this.pattern) {
-  //     validators.push(Validators.pattern(this.pattern));
-  //   }
-
-  //   control.setValidators(validators);
-  //   control.updateValueAndValidity();
-  // }
-
-  // validate(c: AbstractControl): ValidationErrors {
-  //   const validators: ValidatorFn[] = [];
-  //   if (this.isRequired) {
-  //     validators.push(Validators.required);
-  //   }
-  //   if (this.pattern) {
-  //     validators.push(Validators.pattern(this.pattern));
-  //   }
-
-  //   return validators;
-  // }
-
   formatDate(obj: any): string {
     return moment(obj).format(this.dateFormat ? this.dateFormat : 'MM/YYYY');
   }
   writeValue(obj: any): void {
     if (obj !== undefined && obj !== null) {
       this.input.nativeElement.value = this.formatDate(obj);
+      this.setMaxMonthYear();
+      this.date = this.input.nativeElement.value;
       const dateArr: string = this.input.nativeElement.value.split('/');
       this.currentYear = +dateArr[1];
       this.currentMonth = +dateArr[0];
@@ -99,12 +68,43 @@ export class VicMonthPickerComponent implements OnInit, ControlValueAccessor, On
   registerOnTouched(fn: any): void {
     this.onTouched = fn;
   }
-  setDisabledState?(isDisabled: boolean): void {
+  private setMaxMonthYear() {
+    const maxDate = new Date(this.maxDate);
+    this.maxMonth = maxDate.getMonth();
+    this.maxYear = maxDate.getFullYear();
+  }
+  setDisabledState(isDisabled: boolean): void {
     this.isDisabled = isDisabled;
   }
   onChange(event) { }
 
   onTouched() {
+  }
+  onModelChange() {
+    this.isValid = this.validateDate();
+    this.validationCheck.emit(this.isValid);
+  }
+  private checkAlphabetPresent(): boolean {
+    const pattrn = new RegExp('^[0-9/]+$');
+    return pattrn.test(this.date);
+  }
+  private validateDate(): boolean {
+    let isValid = true;
+    if (!this.checkAlphabetPresent() || this.date.length !== 7 ) {
+      isValid = false;
+    }
+    return isValid;
+  }
+  public onBlur() {
+    this.setToMaxDate();
+    this.isValid = this.validateDate();
+    this.validationCheck.emit(this.isValid);
+  }
+  private setToMaxDate() {
+    const dateArr = this.date.split('/');
+    if(+dateArr[0] >= this.maxMonth + 1 && +dateArr[1] >= this.maxYear) {
+      this.date = this.formatDate(this.maxDate);
+    }
   }
   onFocus() {
     setTimeout(() => {
@@ -116,10 +116,10 @@ export class VicMonthPickerComponent implements OnInit, ControlValueAccessor, On
   }
 
   public setPosition(): void {
-    console.log(this.input.nativeElement, this.input.nativeElement.offsetTop, this.input.nativeElement.offsetLeft,
-      this.input.nativeElement.offsetHeight);
-    this.datePickerPosition.top = this.input.nativeElement.offsetTop + this.input.nativeElement.offsetHeight;
-    this.datePickerPosition.left =  this.input.nativeElement.offsetLeft;
+    // console.log(this.input.nativeElement, this.input.nativeElement.offsetTop, this.input.nativeElement.offsetLeft,
+    //   this.input.nativeElement.offsetHeight);
+    this.datePickerPosition.top = -324; // this.input.nativeElement.offsetTop + this.input.nativeElement.offsetHeight;
+    this.datePickerPosition.left = 0; // this.input.nativeElement.offsetLeft;
   }
 
   prev() {
@@ -149,33 +149,34 @@ export class VicMonthPickerComponent implements OnInit, ControlValueAccessor, On
     if (this.isMonthDisabled(i)) {
       return;
     }
-    // console.log(this.vicMonthpickerService.monthList[i], i,
-    //   moment(this.vicMonthpickerService.monthList[i].monthEndDate).format('YYYY-MM-DD'));
     this.showPicker = false;
     this.input.nativeElement.value = this.formatDate(this.vicMonthpickerService.monthList[i].monthEndDate);
+    this.date = this.input.nativeElement.value;
+    this.isValid = this.validateDate();
+    this.validationCheck.emit(this.isValid);
+    this.vicMonthpickerService.monthList[i].isValid = this.isValid;
     this.monthYearChange.emit(this.vicMonthpickerService.monthList[i]);
   }
   public isMonthDisabled(i: number): boolean {
-    const maxDate = new Date(this.maxDate);
-    const maxMonth = maxDate.getMonth();
-    const maxYear = maxDate.getFullYear();
-  //  console.log(maxMonth, maxYear, this.vicMonthpickerService.monthList[i].monthIndex);
-    if (this.currentYear < maxYear) {
+    if (this.currentYear < this.maxYear) {
        return false;
-    } else if ( this.currentYear === maxYear && this.vicMonthpickerService.monthList[i].monthIndex <= maxMonth - 1 ) {
+    } else if ( this.currentYear === this.maxYear && this.vicMonthpickerService.monthList[i].monthIndex <= this.maxMonth ) {
       return false;
     } else {
       return true;
     }
   }
+  public isYearDisabled(i: number) {
+    return this.vicMonthpickerService.yearList[i].yearLabel > this.maxYear;
+  }
   public isSelectedMonth(i: number): boolean {
-    const dateArr: string = this.input.nativeElement.value.split('/');
-    const currentYear = +dateArr[1];
-    const currentMonth = +dateArr[0];
-    return (currentMonth - 1) === this.vicMonthpickerService.monthList[i].monthIndex
-     && currentYear === this.currentYear;
+    return (this.maxMonth) === this.vicMonthpickerService.monthList[i].monthIndex
+     && this.maxYear === this.currentYear;
   }
   public selectYear(i: number): void {
+    if (this.isYearDisabled(i)) {
+      return;
+    }
     this.currentYear = this.vicMonthpickerService.yearList[i].yearLabel;
     this.currentViewType = this.viewTypes.MONTH;
     this.vicMonthpickerService.setMonths(this.currentYear);

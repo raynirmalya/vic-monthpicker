@@ -4,6 +4,7 @@ export interface MonthDetails {
   monthStartDate: Date;
   monthEndDate: Date;
   noOfDays: number;
+  isValid?: boolean;
 }
 export interface YearDetails {
   yearLabel: number;
