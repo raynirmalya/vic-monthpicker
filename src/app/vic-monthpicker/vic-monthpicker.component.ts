@@ -33,7 +33,8 @@ export class VicMonthPickerComponent implements OnInit, ControlValueAccessor {
   public isValid = true;
   private maxMonth: number;
   private maxYear: number;
-  constructor(private vicMonthpickerService: VicMonthpickerService) {
+  constructor(@Self() public controlDir: NgControl, private vicMonthpickerService: VicMonthpickerService) {
+    this.controlDir.valueAccessor = this;
   }
 
 

@@ -3,23 +3,36 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { VicMonthPickerComponent } from './vic-monthpicker.component';
 import { VicMonthpickerService } from './vic-monthpicker.service';
 import { ClickOutsideDirective } from './clickOutside';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-
-describe('VicMonthpickerComponent', () => {
+import { FormsModule, ReactiveFormsModule, NgControl, FormControl } from '@angular/forms';
+import * as moment from 'moment-timezone';
+fdescribe('VicMonthpickerComponent', () => {
   let component: VicMonthPickerComponent;
   let fixture: ComponentFixture<VicMonthPickerComponent>;
 
   beforeEach(async(() => {
+    const NG_CONTROL_PROVIDER = {
+      provide: NgControl,
+      useClass: class extends NgControl {
+        control = new FormControl();
+        // tslint:disable-next-line: no-empty
+        viewToModelUpdate() {}
+      },
+    };
+
     TestBed.configureTestingModule({
       declarations: [ VicMonthPickerComponent, ClickOutsideDirective ],
       imports: [FormsModule, ReactiveFormsModule],
       providers: [VicMonthpickerService]
+    })
+    .overrideComponent(VicMonthPickerComponent, {
+      add: { providers: [NG_CONTROL_PROVIDER] },
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(VicMonthPickerComponent);
+    (fixture.componentInstance as any).ngControl = new FormControl();
     component = fixture.componentInstance;
     component.maxDate = '06/06/2021';
     component['setMaxMonthYear']();
@@ -33,15 +46,15 @@ describe('VicMonthpickerComponent', () => {
 
   it('formatDate: should return date in MM/YYYY format', () => {
     const res = component.formatDate(new Date());
-    expect(res).toBe('05/2020');
+    expect(res).toBe(moment(new Date()).format('MM/YYYY'));
     component.dateFormat = 'MM/YYYY';
     const res1 = component.formatDate(new Date());
-    expect(res1).toBe('05/2020');
+    expect(res1).toBe(moment(new Date()).format('MM/YYYY'));
   });
 
   it('writeValue: should set Date', () => {
     component.writeValue(new Date());
-    expect(component.date).toBe('05/2020');
+    expect(component.date).toBe(moment(new Date()).format('MM/YYYY'));
   });
 
   it('registerOnChange: should set onChange', () => {
